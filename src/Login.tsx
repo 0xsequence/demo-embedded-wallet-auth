@@ -1,4 +1,17 @@
-import { Box, Text, TextInput, Button, Spinner, Divider, Modal, Switch } from '@0xsequence/design-system'
+import {
+  Box,
+  Text,
+  TextInput,
+  Button,
+  Spinner,
+  Divider,
+  Modal,
+  Collapsible,
+  EmailIcon,
+  KeyIcon,
+  Toast,
+  Switch
+} from '@0xsequence/design-system'
 import { SetStateAction, useEffect, useRef, useState } from 'react'
 import { CredentialResponse, GoogleLogin, useGoogleLogin } from '@react-oauth/google'
 import AppleSignin from 'react-apple-signin-auth'
@@ -17,9 +30,14 @@ import { EmailConflictInfo } from '@0xsequence/waas'
 import { PlayFabClient } from 'playfab-sdk'
 import { LoginRequest } from './LoginRequest.tsx'
 import { getMessageFromUnknownError } from './utils/getMessageFromUnknownError.ts'
+import { useCallback } from 'react'
 
 function Login() {
   const [email, setEmail] = useState('')
+  const [playfabEmail, setPlayfabEmail] = useState('')
+  const [playfabError, setPlayfabError] = useState('')
+  const [playfabLoggingIn, setPlayfabLoggingIn] = useState(false)
+  const [playfabPassword, setPlayfabPassword] = useState('')
   const inputRef = useRef<HTMLInputElement | null>(null)
   const isEmailValid = inputRef.current?.validity.valid
   const [showEmailWarning, setEmailWarning] = useState(false)
@@ -65,6 +83,41 @@ function Login() {
       )
     }
   })
+
+  const handlePlayfabLogin = useCallback(
+    () =>
+      PlayFabClient.LoginWithEmailAddress(
+        {
+          Password: playfabPassword,
+          Email: playfabEmail
+        },
+        async (error, response) => {
+          if (error) {
+            setPlayfabError(JSON.stringify(error))
+            console.error('Error: ' + JSON.stringify(error))
+          } else if (response.data.SessionTicket) {
+            try {
+              const seqRes = await sequence.signIn(
+                {
+                  playFabTitleId: import.meta.env.VITE_PLAYFAB_TITLE_ID,
+                  playFabSessionTicket: response.data.SessionTicket
+                },
+                randomName()
+              )
+              console.log('Sequence response:', seqRes)
+              router.navigate('/')
+              setPlayfabError('')
+            } catch (e) {
+              console.error('Error: ' + getMessageFromUnknownError(e))
+              setPlayfabError(getMessageFromUnknownError(e))
+            }
+          }
+          setPlayfabLoggingIn(false)
+          setTimeout(() => setPlayfabError(''), 4000)
+        }
+      ),
+    [playfabEmail, playfabPassword]
+  )
 
   const {
     inProgress: emailAuthInProgress,
@@ -274,17 +327,48 @@ function Login() {
               <Divider background="buttonGlass" width="full" />
 
               {import.meta.env.VITE_PLAYFAB_TITLE_ID && (
-                <Box>
-                  <Box marginBottom="4">
-                    <Text variant="large" color="text100" fontWeight="bold">
-                      Playfab login
-                    </Text>
-                  </Box>
-
+                <Collapsible label="Playfab Login">
                   <Box>
                     <Button label="Login with Google (through Playfab)" onClick={handleGooglePlayfabLogin} />
                   </Box>
-                </Box>
+                  <br />
+                  <Collapsible label="Login with Playfab email/password">
+                    <Box flexDirection="row" gap="4">
+                      <TextInput
+                        leftIcon={EmailIcon}
+                        placeholder="email address"
+                        onChange={(ev: { target: { value: SetStateAction<string> } }) => setPlayfabEmail(ev.target.value)}
+                      />
+                      <TextInput
+                        leftIcon={KeyIcon}
+                        placeholder="password"
+                        type="password"
+                        onChange={(ev: { target: { value: SetStateAction<string> } }) => setPlayfabPassword(ev.target.value)}
+                        onKeyDown={(event: KeyboardEvent) => {
+                          if (event.key === 'Enter') {
+                            if (playfabLoggingIn) {
+                              return
+                            }
+                            setPlayfabLoggingIn(true)
+                            handlePlayfabLogin()
+                          }
+                        }}
+                      />
+                      <Button
+                        pending={playfabLoggingIn}
+                        label="Login"
+                        onClick={() => {
+                          if (playfabLoggingIn) {
+                            return
+                          }
+                          setPlayfabLoggingIn(true)
+                          handlePlayfabLogin()
+                        }}
+                      />
+                    </Box>
+                    {playfabError && <Toast title="Error" variant="error" isDismissible={true} description={playfabError} />}
+                  </Collapsible>
+                </Collapsible>
               )}
 
               {import.meta.env.VITE_STYTCH_PUBLIC_TOKEN && !import.meta.env.VITE_STYTCH_LEGACY_ISSUER && <StytchLogin />}

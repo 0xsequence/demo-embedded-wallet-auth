@@ -40,7 +40,7 @@ if (targetEnv === 'dev') {
 export const sequence = new SequenceWaaS({
   network: 'polygon',
   projectAccessKey: projectAccessKey,
-  waasConfigKey: waasConfigKey,
+  waasConfigKey: waasConfigKey
 })
 
 export const router = createHashRouter([

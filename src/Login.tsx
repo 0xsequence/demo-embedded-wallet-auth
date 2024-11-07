@@ -1,4 +1,4 @@
-import { Box, Text, TextInput, Button, Spinner, Divider, Modal } from '@0xsequence/design-system'
+import { Box, Text, TextInput, Button, Spinner, Divider, Modal, Switch } from '@0xsequence/design-system'
 import { SetStateAction, useEffect, useRef, useState } from 'react'
 import { CredentialResponse, GoogleLogin, useGoogleLogin } from '@react-oauth/google'
 import AppleSignin from 'react-apple-signin-auth'
@@ -121,11 +121,31 @@ function Login() {
     router.navigate('/')
   }
 
+  const urlParams = new URLSearchParams(window.location.search)
+  const isDevEnv = urlParams.get('env') === 'dev'
+  const [useDevEnv, setUseDevEnv] = useState(isDevEnv)
+
   return (
     <>
       <Box marginY="0" marginX="auto" paddingX="6" style={{ maxWidth: '720px', marginTop: '80px', marginBottom: '80px' }}>
         <Box marginBottom="16" flexDirection="row">
           <Logo />
+          <Box marginLeft="auto">
+            <Switch
+              label="Use dev env"
+              checked={useDevEnv}
+              onCheckedChange={() => {
+                if (!useDevEnv) {
+                  urlParams.set('env', 'dev')
+                  window.location.search = urlParams.toString()
+                } else {
+                  urlParams.delete('env')
+                  window.location.search = urlParams.toString()
+                }
+                setUseDevEnv(!useDevEnv)
+              }}
+            />
+          </Box>
         </Box>
 
         <Box marginTop="6" marginBottom="4">

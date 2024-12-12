@@ -19,6 +19,7 @@ import { AccountName } from './components/views/AccountName.tsx'
 import { Account, IdentityType, Network } from '@0xsequence/waas'
 import { getMessageFromUnknownError } from './utils/getMessageFromUnknownError.ts'
 import { PlayFabClient } from 'playfab-sdk'
+import { ChildAdoptionView } from './components/views/ChildAdoptionView.tsx'
 
 PlayFabClient.settings.titleId = import.meta.env.VITE_PLAYFAB_TITLE_ID
 
@@ -207,6 +208,7 @@ function App() {
           </Text>
         </Collapsible>
         <ListAccountsView />
+        <ChildAdoptionView network={network!}/>
       </Box>
     </>
   )

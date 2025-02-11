@@ -90,9 +90,15 @@ export function useTwitchAuth(config: TwitchAuthConfig) {
         client_id: config.clientId,
         redirect_uri: config.redirectUri,
         response_type: 'token id_token',
-        scope: config.scope || 'openid email',
+        scope: config.scope || 'openid user:read:email',
         state,
-        nonce
+        nonce,
+        claims: JSON.stringify({
+          id_token: {
+            email: null,
+            email_verified: null
+          }
+        })
       })
 
       const authUrl = `https://id.twitch.tv/oauth2/authorize?${params.toString()}`

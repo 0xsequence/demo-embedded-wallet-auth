@@ -142,68 +142,6 @@ function Login() {
     })
   }, [])
 
-  // Handle Facebook callback redirect
-  useEffect(() => {
-    // Check if we're on the callback URL
-    if (window.location.pathname === '/facebook-callback') {
-      const urlParams = new URLSearchParams(window.location.search)
-      const code = urlParams.get('code')
-      const state = urlParams.get('state')
-      const storedState = sessionStorage.getItem('facebook_state')
-      const codeVerifier = sessionStorage.getItem('facebook_code_verifier')
-
-      // Remove Facebook's #_=_ hash if present
-      if (window.location.hash === '#_=_') {
-        window.location.hash = ''
-      }
-
-      if (!code || !state || !storedState || !codeVerifier || state !== storedState) {
-        console.error('Invalid callback parameters')
-        return
-      }
-
-      const exchangeToken = async () => {
-        try {
-          const tokenResponse = await fetch(
-            `https://graph.facebook.com/v11.0/oauth/access_token?${new URLSearchParams({
-              client_id: import.meta.env.VITE_FACEBOOK_APP_ID,
-              redirect_uri: window.location.origin + '/facebook-callback',
-              code_verifier: codeVerifier,
-              code
-            })}`
-          )
-
-          if (!tokenResponse.ok) {
-            throw new Error('Failed to exchange code for tokens')
-          }
-
-          const { id_token } = await tokenResponse.json()
-
-          // Clean up session storage
-          sessionStorage.removeItem('facebook_code_verifier')
-          sessionStorage.removeItem('facebook_nonce')
-          sessionStorage.removeItem('facebook_state')
-
-          // Sign in with Sequence using the ID token
-          const res = await sequence.signIn(
-            {
-              idToken: id_token
-            },
-            randomName()
-          )
-
-          console.log(`Wallet address: ${res.wallet}`)
-          console.log(`Email address: ${res.email}`)
-          router.navigate('/')
-        } catch (error) {
-          console.error('Failed to complete Facebook authentication:', error)
-        }
-      }
-
-      exchangeToken()
-    }
-  }, [])
-
   const handleGoogleLogin = async (tokenResponse: CredentialResponse) => {
     const res = await sequence.signIn(
       {
@@ -337,9 +275,8 @@ function Login() {
     router.navigate('/')
   }
 
-  const urlParams = new URLSearchParams(window.location.search)
-  const isDevEnv = urlParams.get('env') === 'dev'
-  const [useDevEnv, setUseDevEnv] = useState(isDevEnv)
+  const isDevEnv = localStorage.getItem('isDev') === 'true'
+  const [useDevEnv] = useState(isDevEnv)
 
   return (
     <>
@@ -351,14 +288,9 @@ function Login() {
               label="Use dev env"
               checked={useDevEnv}
               onCheckedChange={() => {
-                if (!useDevEnv) {
-                  urlParams.set('env', 'dev')
-                  window.location.search = urlParams.toString()
-                } else {
-                  urlParams.delete('env')
-                  window.location.search = urlParams.toString()
-                }
-                setUseDevEnv(!useDevEnv)
+                // Use full URL path to ensure query param persists
+                localStorage.setItem('isDev', (!useDevEnv).toString())
+                window.location.reload()
               }}
             />
           </Box>

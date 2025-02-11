@@ -21,13 +21,12 @@ const SEQUENCE_WAAS_CONFIG_KEY = import.meta.env.VITE_SEQUENCE_WAAS_CONFIG_KEY
 const SEQUENCE_PROJECT_ACCESS_KEY_DEV = import.meta.env.VITE_SEQUENCE_PROJECT_ACCESS_KEY_DEV
 const SEQUENCE_WAAS_CONFIG_KEY_DEV = import.meta.env.VITE_SEQUENCE_WAAS_CONFIG_KEY_DEV
 
-const urlParams = new URLSearchParams(window.location.search)
-const targetEnv = urlParams.get('env') ?? 'prod'
-let projectAccessKey = urlParams.get('projectAccessKey') ?? SEQUENCE_PROJECT_ACCESS_KEY
-let waasConfigKey = urlParams.get('waasConfigKey') ?? SEQUENCE_WAAS_CONFIG_KEY
-let googleClientId = urlParams.get('googleClientId') ?? GOOGLE_CLIENT_ID
+const isDevEnv = localStorage.getItem('isDev') === 'true'
+let projectAccessKey = SEQUENCE_PROJECT_ACCESS_KEY
+let waasConfigKey = SEQUENCE_WAAS_CONFIG_KEY
+let googleClientId = GOOGLE_CLIENT_ID
 
-if (targetEnv === 'dev') {
+if (isDevEnv) {
   console.log('Using dev environment')
   console.log(`Project Access Key: ${SEQUENCE_PROJECT_ACCESS_KEY_DEV}`)
   console.log(`Waas Config Key: ${SEQUENCE_WAAS_CONFIG_KEY_DEV}`)

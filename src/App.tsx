@@ -108,8 +108,13 @@ function App() {
         )}
       </AnimatePresence>
       <Box marginY="0" marginX="auto" paddingX="6" style={{ maxWidth: '720px', marginTop: '80px', marginBottom: '80px' }}>
-        <Box marginBottom="10">
+        <Box marginBottom="10" flexDirection="column">
           <Logo />
+          {localStorage.getItem('isDev') === 'true' && (
+            <Text variant="small" color="negative" marginTop="2">
+              Using Dev Environment
+            </Text>
+          )}
         </Box>
 
         <Box marginBottom="5" flexDirection="row">

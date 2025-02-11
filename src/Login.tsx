@@ -171,7 +171,6 @@ function Login() {
     clientId: import.meta.env.VITE_TWITCH_CLIENT_ID,
     redirectUri: `${window.location.origin}/login`,
     onSuccess: async idToken => {
-      console.log('twitch idToken:', idToken)
       try {
         const res = await sequence.signIn(
           {
@@ -372,7 +371,8 @@ function Login() {
                     label={twitchAuthInProgress ? 'Logging in...' : 'Continue with Twitch'}
                   />
                 )}
-                {import.meta.env.VITE_FACEBOOK_APP_ID && (
+                {/* Temporarily disable Facebook login till the app id is confirmed by facebook, replace VITE_TEMP_DISABLED with VITE_FACEBOOK_APP_ID to enable */}
+                {import.meta.env.VITE_TEMP_DISABLED && (
                   <Button
                     key="facebook"
                     onClick={initiateFacebookLogin}

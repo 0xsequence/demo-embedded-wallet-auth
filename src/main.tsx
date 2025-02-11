@@ -1,15 +1,15 @@
+import '@0xsequence/design-system/styles.css'
+import './main.css'
 import React from 'react'
 import ReactDOM from 'react-dom/client'
-import '@0xsequence/design-system/styles.css'
 import { ThemeProvider, ToastProvider } from '@0xsequence/design-system'
 import { createBrowserRouter, RouterProvider } from 'react-router-dom'
-import Login from './Login.tsx'
-import FacebookCallback from './FacebookCallback.tsx'
 import { GoogleOAuthProvider } from '@react-oauth/google'
 import { SequenceWaaS } from '@0xsequence/waas'
-import App from './App.tsx'
 import { ethers } from 'ethers'
-import './main.css'
+
+import App from './App.tsx'
+import Login from './Login.tsx'
 import { MaybeWithStytch } from './components/MaybeWithStytch.tsx'
 
 export const node = new ethers.JsonRpcProvider('https://nodes.sequence.app/polygon')
@@ -50,10 +50,6 @@ export const router = createBrowserRouter([
   {
     path: '/',
     element: <App />
-  },
-  {
-    path: '/facebook-callback',
-    element: <FacebookCallback />
   }
 ])
 

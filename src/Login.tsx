@@ -31,7 +31,7 @@ import { PlayFabClient } from 'playfab-sdk'
 import { LoginRequest } from './LoginRequest.tsx'
 import { getMessageFromUnknownError } from './utils/getMessageFromUnknownError.ts'
 import { useCallback } from 'react'
-import { generateCodeVerifier, generateCodeChallenge, generateNonce } from './utils/pkce'
+import { useFacebookAuth } from './utils/useFacebookAuth'
 
 function Login() {
   const [email, setEmail] = useState('')
@@ -169,105 +169,27 @@ function Login() {
     router.navigate('/')
   }
 
-  const initiateFacebookLogin = async () => {
-    try {
-      const codeVerifier = generateCodeVerifier()
-      const codeChallenge = await generateCodeChallenge(codeVerifier)
-      const nonce = generateNonce()
-      const state = generateNonce() // Use nonce generator for state too
-
-      // Store PKCE values in session storage to use after redirect
-      sessionStorage.setItem('facebook_code_verifier', codeVerifier)
-      sessionStorage.setItem('facebook_nonce', nonce)
-      sessionStorage.setItem('facebook_state', state)
-
-      const params = new URLSearchParams({
-        client_id: import.meta.env.VITE_FACEBOOK_APP_ID,
-        scope: 'openid',
-        response_type: 'code',
-        redirect_uri: `${window.location.origin}/facebook-callback`,
-        state,
-        code_challenge: codeChallenge,
-        code_challenge_method: 'S256',
-        nonce
-      })
-
-      const authUrl = `https://www.facebook.com/v11.0/dialog/oauth?${params.toString()}`
-
-      // Open popup
-      const popup = window.open(authUrl, 'facebook-login', 'width=600,height=700,left=400,top=100')
-
-      if (!popup) {
-        throw new Error('Popup was blocked. Please allow popups for this site.')
+  const { initiateFacebookLogin } = useFacebookAuth({
+    appId: import.meta.env.VITE_FACEBOOK_APP_ID,
+    onSuccess: async idToken => {
+      try {
+        const res = await sequence.signIn(
+          {
+            idToken
+          },
+          randomName()
+        )
+        console.log(`Wallet address: ${res.wallet}`)
+        console.log(`Email address: ${res.email}`)
+        router.navigate('/')
+      } catch (error) {
+        console.error('Failed to complete Facebook authentication:', error)
       }
-
-      // Check if popup was closed before completing
-      const checkPopupClosed = setInterval(() => {
-        if (popup.closed) {
-          clearInterval(checkPopupClosed)
-          window.removeEventListener('message', messageHandler)
-          console.error('Authentication was cancelled')
-        }
-      }, 1000)
-
-      // Add message listener for popup callback
-      const messageHandler = async (event: MessageEvent) => {
-        // Only accept messages from our callback page
-        if (event.data?.type === 'FACEBOOK_AUTH_CALLBACK') {
-          window.removeEventListener('message', messageHandler)
-          clearInterval(checkPopupClosed)
-
-          const { code, state: returnedState } = event.data.payload
-
-          if (!code || !returnedState || returnedState !== state) {
-            console.error('Invalid callback parameters')
-            return
-          }
-
-          try {
-            // Exchange code for tokens
-            const tokenResponse = await fetch(
-              `https://graph.facebook.com/v11.0/oauth/access_token?${new URLSearchParams({
-                client_id: import.meta.env.VITE_FACEBOOK_APP_ID,
-                redirect_uri: `${window.location.origin}/facebook-callback`,
-                code_verifier: codeVerifier,
-                code
-              })}`
-            )
-
-            if (!tokenResponse.ok) {
-              throw new Error('Failed to exchange code for tokens')
-            }
-
-            const { id_token } = await tokenResponse.json()
-
-            // Clean up session storage
-            sessionStorage.removeItem('facebook_code_verifier')
-            sessionStorage.removeItem('facebook_nonce')
-            sessionStorage.removeItem('facebook_state')
-
-            // Sign in with Sequence using the ID token
-            const res = await sequence.signIn(
-              {
-                idToken: id_token
-              },
-              randomName()
-            )
-
-            console.log(`Wallet address: ${res.wallet}`)
-            console.log(`Email address: ${res.email}`)
-            router.navigate('/')
-          } catch (error) {
-            console.error('Failed to complete Facebook authentication:', error)
-          }
-        }
-      }
-
-      window.addEventListener('message', messageHandler)
-    } catch (error) {
+    },
+    onError: error => {
       console.error('Failed to initiate Facebook login:', error)
     }
-  }
+  })
 
   const handleGuestLogin = async () => {
     const signInResponse = await sequence.signIn({ guest: true }, randomName())

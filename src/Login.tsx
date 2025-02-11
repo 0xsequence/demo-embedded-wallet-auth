@@ -174,7 +174,7 @@ function Login() {
     clientId: import.meta.env.VITE_TWITCH_CLIENT_ID,
     redirectUri: `${window.location.origin}/login`,
     scope: 'openid',
-    onSuccess: async (accessToken, idToken) => {
+    onSuccess: async (_accessToken, idToken) => {
       try {
         const res = await sequence.signIn(
           {

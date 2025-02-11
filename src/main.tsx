@@ -11,7 +11,6 @@ import App from './App.tsx'
 import { ethers } from 'ethers'
 import './main.css'
 import { MaybeWithStytch } from './components/MaybeWithStytch.tsx'
-import FacebookCallback from './FacebookCallback.tsx'
 
 export const node = new ethers.JsonRpcProvider('https://nodes.sequence.app/polygon')
 
@@ -48,10 +47,6 @@ export const router = createHashRouter([
   {
     path: '/login',
     element: <Login />
-  },
-  {
-    path: '/facebook-callback',
-    element: <FacebookCallback />
   },
   {
     path: '/',

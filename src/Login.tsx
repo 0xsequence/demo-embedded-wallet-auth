@@ -193,7 +193,7 @@ function Login() {
       })
 
       const redirectUri = window.location.origin + '/facebook-callback'
-      params.set('redirect_uri', encodeURIComponent(redirectUri))
+      params.set('redirect_uri', redirectUri)
       const authUrl = `https://www.facebook.com/v11.0/dialog/oauth?${params.toString()}`
 
       // Open popup
@@ -229,7 +229,7 @@ function Login() {
             const tokenResponse = await fetch(
               `https://graph.facebook.com/v11.0/oauth/access_token?${new URLSearchParams({
                 client_id: import.meta.env.VITE_FACEBOOK_APP_ID,
-                redirect_uri: encodeURIComponent(redirectUri),
+                redirect_uri: redirectUri,
                 code_verifier: codeVerifier,
                 code
               })}`

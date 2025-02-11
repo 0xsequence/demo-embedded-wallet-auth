@@ -17,10 +17,11 @@
   },
   "dependencies": {
     "0xsequence": "2.2.4",
+    "@0xsequence/design-system": "1.7.8",
     "@0xsequence/indexer": "2.2.4",
     "@0xsequence/network": "2.2.4",
     "@0xsequence/waas": "2.2.4",
-    "@0xsequence/design-system": "1.7.8",
+    "@greatsumini/react-facebook-login": "^3.4.0",
     "@react-oauth/google": "^0.12.1",
     "@stytch/react": "^19.1.0",
     "@stytch/vanilla-js": "^5.5.0",

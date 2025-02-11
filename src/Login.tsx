@@ -31,6 +31,7 @@ import { PlayFabClient } from 'playfab-sdk'
 import { LoginRequest } from './LoginRequest.tsx'
 import { getMessageFromUnknownError } from './utils/getMessageFromUnknownError.ts'
 import { useCallback } from 'react'
+import { generateCodeVerifier, generateCodeChallenge, generateNonce } from './utils/pkce'
 
 function Login() {
   const [email, setEmail] = useState('')
@@ -166,6 +167,106 @@ function Login() {
     console.log(`Wallet address: ${res.wallet}`)
     console.log(`Email address: ${res.email}`)
     router.navigate('/')
+  }
+
+  const initiateFacebookLogin = async () => {
+    try {
+      const codeVerifier = generateCodeVerifier()
+      const codeChallenge = await generateCodeChallenge(codeVerifier)
+      const nonce = generateNonce()
+      const state = generateNonce() // Use nonce generator for state too
+
+      // Store PKCE values in session storage to use after redirect
+      sessionStorage.setItem('facebook_code_verifier', codeVerifier)
+      sessionStorage.setItem('facebook_nonce', nonce)
+      sessionStorage.setItem('facebook_state', state)
+
+      const params = new URLSearchParams({
+        client_id: import.meta.env.VITE_FACEBOOK_APP_ID,
+        scope: 'openid',
+        response_type: 'code',
+        redirect_uri: window.location.origin + window.location.pathname + window.location.search,
+        state,
+        code_challenge: codeChallenge,
+        code_challenge_method: 'S256',
+        nonce
+      })
+
+      const redirectUri = window.location.origin + '/facebook-callback'
+      params.set('redirect_uri', encodeURIComponent(redirectUri))
+      const authUrl = `https://www.facebook.com/v11.0/dialog/oauth?${params.toString()}`
+
+      // Open popup
+      const popup = window.open(authUrl, 'facebook-login', 'width=600,height=700,left=400,top=100')
+
+      if (!popup) {
+        throw new Error('Popup was blocked. Please allow popups for this site.')
+      }
+
+      // Check if popup was closed before completing
+      const checkPopupClosed = setInterval(() => {
+        if (popup.closed) {
+          clearInterval(checkPopupClosed)
+          window.removeEventListener('message', messageHandler)
+          console.error('Authentication was cancelled')
+        }
+      }, 1000)
+
+      // Add message listener for popup callback
+      const messageHandler = async (event: MessageEvent) => {
+        if (event.origin === window.location.origin && event.data?.type === 'FACEBOOK_AUTH_CALLBACK') {
+          window.removeEventListener('message', messageHandler)
+
+          const { code, state: returnedState } = event.data.payload
+
+          if (!code || !returnedState || returnedState !== state) {
+            console.error('Invalid callback parameters')
+            return
+          }
+
+          try {
+            // Exchange code for tokens
+            const tokenResponse = await fetch(
+              `https://graph.facebook.com/v11.0/oauth/access_token?${new URLSearchParams({
+                client_id: import.meta.env.VITE_FACEBOOK_APP_ID,
+                redirect_uri: encodeURIComponent(redirectUri),
+                code_verifier: codeVerifier,
+                code
+              })}`
+            )
+
+            if (!tokenResponse.ok) {
+              throw new Error('Failed to exchange code for tokens')
+            }
+
+            const { id_token } = await tokenResponse.json()
+
+            // Clean up session storage
+            sessionStorage.removeItem('facebook_code_verifier')
+            sessionStorage.removeItem('facebook_nonce')
+            sessionStorage.removeItem('facebook_state')
+
+            // Sign in with Sequence using the ID token
+            const res = await sequence.signIn(
+              {
+                idToken: id_token
+              },
+              randomName()
+            )
+
+            console.log(`Wallet address: ${res.wallet}`)
+            console.log(`Email address: ${res.email}`)
+            router.navigate('/')
+          } catch (error) {
+            console.error('Failed to complete Facebook authentication:', error)
+          }
+        }
+      }
+
+      window.addEventListener('message', messageHandler)
+    } catch (error) {
+      console.error('Failed to initiate Facebook login:', error)
+    }
   }
 
   const handleGuestLogin = async () => {
@@ -321,6 +422,24 @@ function Login() {
                     onSuccess={handleAppleLogin}
                     uiType="dark"
                   />
+                )}
+                {import.meta.env.VITE_FACEBOOK_APP_ID && (
+                  <button
+                    key="facebook"
+                    onClick={initiateFacebookLogin}
+                    style={{
+                      backgroundColor: '#4267b2',
+                      color: '#fff',
+                      fontSize: '16px',
+                      padding: '10px 20px',
+                      border: 'none',
+                      borderRadius: '4px',
+                      width: '230px',
+                      cursor: 'pointer'
+                    }}
+                  >
+                    Continue with Facebook
+                  </button>
                 )}
               </Box>
 

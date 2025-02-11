@@ -18,8 +18,8 @@ export function useFacebookAuth(config: FacebookAuthConfig) {
 
     // Only process if this appears to be a Facebook callback
     if (code || error) {
-      const codeVerifier = sessionStorage.getItem('facebook_code_verifier')
       const storedState = sessionStorage.getItem('facebook_state')
+      const codeVerifier = sessionStorage.getItem('facebook_code_verifier')
 
       // Clean up session storage
       sessionStorage.removeItem('facebook_code_verifier')
@@ -52,41 +52,20 @@ export function useFacebookAuth(config: FacebookAuthConfig) {
         return
       }
 
-      // Exchange code for tokens
-      fetch(
-        `https://graph.facebook.com/v11.0/oauth/access_token?${new URLSearchParams({
-          client_id: config.appId,
-          redirect_uri: `${window.location.origin}/login`,
-          code_verifier: codeVerifier!,
-          code
-        })}`
+      // Send code back to parent window and close popup
+      window.opener?.postMessage(
+        {
+          type: 'FACEBOOK_AUTH_CODE',
+          payload: {
+            code,
+            codeVerifier: codeVerifier!
+          }
+        },
+        '*'
       )
-        .then(response => {
-          if (!response.ok) throw new Error('Failed to exchange code for tokens')
-          return response.json()
-        })
-        .then(data => {
-          window.opener?.postMessage(
-            {
-              type: 'FACEBOOK_AUTH_CALLBACK',
-              payload: { idToken: data.id_token }
-            },
-            '*'
-          )
-          window.close()
-        })
-        .catch(error => {
-          window.opener?.postMessage(
-            {
-              type: 'FACEBOOK_AUTH_ERROR',
-              error: error instanceof Error ? error.message : 'Failed to complete Facebook authentication'
-            },
-            '*'
-          )
-          window.close()
-        })
+      window.close()
     }
-  }, [])
+  }, []) // Only run on first render
 
   const initiateFacebookLogin = async (): Promise<void> => {
     try {
@@ -121,11 +100,33 @@ export function useFacebookAuth(config: FacebookAuthConfig) {
       }
 
       // Add message listener for popup callback
-      const messageHandler = (event: MessageEvent) => {
-        if (event.data?.type === 'FACEBOOK_AUTH_CALLBACK') {
+      const messageHandler = async (event: MessageEvent) => {
+        if (event.data?.type === 'FACEBOOK_AUTH_CODE') {
+          const { code, codeVerifier } = event.data.payload
+
           window.removeEventListener('message', messageHandler)
           clearInterval(checkPopupClosed)
-          config.onSuccess?.(event.data.payload.idToken)
+
+          try {
+            // Exchange code for tokens
+            const tokenResponse = await fetch(
+              `https://graph.facebook.com/v11.0/oauth/access_token?${new URLSearchParams({
+                client_id: config.appId,
+                redirect_uri: `${window.location.origin}/login`,
+                code_verifier: codeVerifier,
+                code
+              })}`
+            )
+
+            if (!tokenResponse.ok) {
+              throw new Error('Failed to exchange code for tokens')
+            }
+
+            const { id_token } = await tokenResponse.json()
+            config.onSuccess?.(id_token)
+          } catch (error) {
+            config.onError?.(error instanceof Error ? error : new Error('Failed to complete Facebook authentication'))
+          }
         } else if (event.data?.type === 'FACEBOOK_AUTH_ERROR') {
           window.removeEventListener('message', messageHandler)
           clearInterval(checkPopupClosed)

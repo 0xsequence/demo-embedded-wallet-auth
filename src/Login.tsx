@@ -32,6 +32,7 @@ import { LoginRequest } from './LoginRequest.tsx'
 import { getMessageFromUnknownError } from './utils/getMessageFromUnknownError.ts'
 import { useCallback } from 'react'
 import { useFacebookAuth } from './utils/useFacebookAuth'
+import { useTwitchAuth } from './utils/useTwitchAuth'
 
 function Login() {
   const [email, setEmail] = useState('')
@@ -168,6 +169,30 @@ function Login() {
     console.log(`Email address: ${res.email}`)
     router.navigate('/')
   }
+
+  const { initiateTwitchLogin, inProgress: twitchAuthInProgress } = useTwitchAuth({
+    clientId: import.meta.env.VITE_TWITCH_CLIENT_ID,
+    redirectUri: `${window.location.origin}/login`,
+    scope: 'openid',
+    onSuccess: async (accessToken, idToken) => {
+      try {
+        const res = await sequence.signIn(
+          {
+            idToken
+          },
+          randomName()
+        )
+        console.log(`Wallet address: ${res.wallet}`)
+        console.log(`Email address: ${res.email}`)
+        router.navigate('/')
+      } catch (error) {
+        console.error('Failed to complete Twitch authentication:', error)
+      }
+    },
+    onError: error => {
+      console.error('Failed to initiate Twitch login:', error)
+    }
+  })
 
   const { initiateFacebookLogin, inProgress: facebookAuthInProgress } = useFacebookAuth({
     appId: import.meta.env.VITE_FACEBOOK_APP_ID,
@@ -337,6 +362,17 @@ function Login() {
                     onError={(error: unknown) => console.error(getMessageFromUnknownError(error))}
                     onSuccess={handleAppleLogin}
                     uiType="dark"
+                  />
+                )}
+                {import.meta.env.VITE_TWITCH_CLIENT_ID && (
+                  <Button
+                    key="twitch"
+                    onClick={initiateTwitchLogin}
+                    style={{
+                      backgroundColor: '#9146FF',
+                      width: '230px'
+                    }}
+                    label={twitchAuthInProgress ? 'Logging in...' : 'Continue with Twitch'}
                   />
                 )}
                 {import.meta.env.VITE_FACEBOOK_APP_ID && (

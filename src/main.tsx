@@ -2,9 +2,9 @@ import React from 'react'
 import ReactDOM from 'react-dom/client'
 import '@0xsequence/design-system/styles.css'
 import { ThemeProvider, ToastProvider } from '@0xsequence/design-system'
-import { createHashRouter, RouterProvider } from 'react-router-dom'
-
+import { createBrowserRouter, RouterProvider } from 'react-router-dom'
 import Login from './Login.tsx'
+import FacebookCallback from './FacebookCallback.tsx'
 import { GoogleOAuthProvider } from '@react-oauth/google'
 import { SequenceWaaS } from '@0xsequence/waas'
 import App from './App.tsx'
@@ -43,7 +43,7 @@ export const sequence = new SequenceWaaS({
   waasConfigKey: waasConfigKey
 })
 
-export const router = createHashRouter([
+export const router = createBrowserRouter([
   {
     path: '/login',
     element: <Login />
@@ -51,6 +51,10 @@ export const router = createHashRouter([
   {
     path: '/',
     element: <App />
+  },
+  {
+    path: '/facebook-callback',
+    element: <FacebookCallback />
   }
 ])
 

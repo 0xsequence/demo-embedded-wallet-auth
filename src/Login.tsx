@@ -247,7 +247,7 @@ function Login() {
         client_id: import.meta.env.VITE_FACEBOOK_APP_ID,
         scope: 'openid',
         response_type: 'code',
-        redirect_uri: window.location.origin + '/facebook-callback',
+        redirect_uri: `${window.location.origin}/facebook-callback`,
         state,
         code_challenge: codeChallenge,
         code_challenge_method: 'S256',
@@ -287,12 +287,11 @@ function Login() {
           }
 
           try {
-            const callbackUrl = window.location.origin + '/facebook-callback'
             // Exchange code for tokens
             const tokenResponse = await fetch(
               `https://graph.facebook.com/v11.0/oauth/access_token?${new URLSearchParams({
                 client_id: import.meta.env.VITE_FACEBOOK_APP_ID,
-                redirect_uri: callbackUrl,
+                redirect_uri: `${window.location.origin}/facebook-callback`,
                 code_verifier: codeVerifier,
                 code
               })}`

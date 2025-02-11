@@ -172,6 +172,7 @@ function Login() {
     redirectUri: `${window.location.origin}/login`,
     scope: 'openid',
     onSuccess: async idToken => {
+      console.log('twitch idToken:', idToken)
       try {
         const res = await sequence.signIn(
           {

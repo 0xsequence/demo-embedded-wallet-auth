@@ -169,7 +169,7 @@ function Login() {
     router.navigate('/')
   }
 
-  const { initiateFacebookLogin, inProgress } = useFacebookAuth({
+  const { initiateFacebookLogin, inProgress: facebookAuthInProgress } = useFacebookAuth({
     appId: import.meta.env.VITE_FACEBOOK_APP_ID,
     onSuccess: async idToken => {
       try {
@@ -343,12 +343,11 @@ function Login() {
                   <Button
                     key="facebook"
                     onClick={initiateFacebookLogin}
-                    pending={inProgress}
                     style={{
                       backgroundColor: '#4267b2',
                       width: '230px'
                     }}
-                    label={inProgress ? 'Logging in...' : 'Continue with Facebook'}
+                    label={facebookAuthInProgress ? 'Logging in...' : 'Continue with Facebook'}
                   />
                 )}
               </Box>

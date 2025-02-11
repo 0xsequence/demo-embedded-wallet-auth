@@ -5,7 +5,7 @@ interface TwitchAuthConfig {
   clientId: string
   redirectUri: string
   scope?: string
-  onSuccess?: (accessToken: string, idToken: string) => void
+  onSuccess?: (idToken: string) => void
   onError?: (error: Error) => void
 }
 
@@ -88,7 +88,7 @@ export function useTwitchAuth(config: TwitchAuthConfig) {
         client_id: config.clientId,
         redirect_uri: config.redirectUri,
         response_type: 'token id_token',
-        scope: config.scope || 'openid',
+        scope: config.scope || 'openid email',
         state,
         nonce
       })
@@ -106,7 +106,7 @@ export function useTwitchAuth(config: TwitchAuthConfig) {
       // Add message listener for popup callback
       const messageHandler = async (event: MessageEvent) => {
         if (event.data?.type === 'TWITCH_AUTH_SUCCESS') {
-          const { accessToken, idToken, nonce } = event.data.payload
+          const { idToken, nonce } = event.data.payload
 
           window.removeEventListener('message', messageHandler)
           clearInterval(checkPopupClosed)
@@ -120,7 +120,7 @@ export function useTwitchAuth(config: TwitchAuthConfig) {
               throw new Error('Invalid nonce in ID token')
             }
 
-            config.onSuccess?.(accessToken, idToken)
+            config.onSuccess?.(idToken)
           } catch (error) {
             config.onError?.(error instanceof Error ? error : new Error('Failed to complete Twitch authentication'))
           } finally {

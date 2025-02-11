@@ -1,16 +1,16 @@
+import { ThemeProvider, ToastProvider } from '@0xsequence/design-system'
 import '@0xsequence/design-system/styles.css'
-import './main.css'
+import { SequenceWaaS } from '@0xsequence/waas'
+import { GoogleOAuthProvider } from '@react-oauth/google'
+import { ethers } from 'ethers'
 import React from 'react'
 import ReactDOM from 'react-dom/client'
-import { ThemeProvider, ToastProvider } from '@0xsequence/design-system'
-import { createBrowserRouter, RouterProvider } from 'react-router-dom'
-import { GoogleOAuthProvider } from '@react-oauth/google'
-import { SequenceWaaS } from '@0xsequence/waas'
-import { ethers } from 'ethers'
+import { RouterProvider, createBrowserRouter } from 'react-router-dom'
 
 import App from './App.tsx'
 import Login from './Login.tsx'
 import { MaybeWithStytch } from './components/MaybeWithStytch.tsx'
+import './main.css'
 
 export const node = new ethers.JsonRpcProvider('https://nodes.sequence.app/polygon')
 

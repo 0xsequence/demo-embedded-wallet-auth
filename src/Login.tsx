@@ -1,36 +1,33 @@
 import {
   Box,
-  Text,
-  TextInput,
   Button,
-  Spinner,
-  Divider,
-  Modal,
   Collapsible,
+  Divider,
   EmailIcon,
   KeyIcon,
-  Toast,
-  Switch
+  Modal,
+  Spinner,
+  Switch,
+  Text,
+  TextInput,
+  Toast
 } from '@0xsequence/design-system'
-import { SetStateAction, useEffect, useRef, useState } from 'react'
+import { EmailConflictInfo } from '@0xsequence/waas'
 import { CredentialResponse, GoogleLogin, useGoogleLogin } from '@react-oauth/google'
+import { PlayFabClient } from 'playfab-sdk'
+import { SetStateAction, useCallback, useEffect, useRef, useState } from 'react'
 import AppleSignin from 'react-apple-signin-auth'
 
-import { router, sequence } from './main'
-
-import { PINCodeInput } from './components/PINCodeInput'
+import { LoginRequest } from './LoginRequest.tsx'
 import { Logo } from './components/Logo'
+import { PINCodeInput } from './components/PINCodeInput'
+import { StytchLegacyLogin } from './components/StytchLegacyLogin.tsx'
+import { StytchLogin } from './components/StytchLogin.tsx'
 import { EmailConflictWarning } from './components/views/EmailConflictWarningView.tsx'
-
+import { router, sequence } from './main'
+import { getMessageFromUnknownError } from './utils/getMessageFromUnknownError.ts'
 import { randomName } from './utils/indexer'
 import { useEmailAuth } from './utils/useEmailAuth.ts'
-import { StytchLogin } from './components/StytchLogin.tsx'
-import { StytchLegacyLogin } from './components/StytchLegacyLogin.tsx'
-import { EmailConflictInfo } from '@0xsequence/waas'
-import { PlayFabClient } from 'playfab-sdk'
-import { LoginRequest } from './LoginRequest.tsx'
-import { getMessageFromUnknownError } from './utils/getMessageFromUnknownError.ts'
-import { useCallback } from 'react'
 import { useFacebookAuth } from './utils/useFacebookAuth'
 import { useTwitchAuth } from './utils/useTwitchAuth'
 
@@ -174,7 +171,7 @@ function Login() {
     clientId: import.meta.env.VITE_TWITCH_CLIENT_ID,
     redirectUri: `${window.location.origin}/login`,
     scope: 'openid',
-    onSuccess: async (_accessToken, idToken) => {
+    onSuccess: async idToken => {
       try {
         const res = await sequence.signIn(
           {

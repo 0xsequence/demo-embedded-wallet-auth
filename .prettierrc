@@ -5,5 +5,10 @@
   "singleQuote": true,
   "trailingComma": "none",
   "arrowParens": "avoid",
-  "printWidth": 130
+  "printWidth": 130,
+  "plugins": ["@trivago/prettier-plugin-sort-imports"],
+  "importOrder": ["^[^.](.*)$", "^[./]"],
+  "importOrderSeparation": true,
+  "importOrderSortSpecifiers": true,
+  "importOrderMergeDuplicateImports": true
 }

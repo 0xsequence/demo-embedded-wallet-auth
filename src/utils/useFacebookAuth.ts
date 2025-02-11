@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { generateCodeVerifier, generateCodeChallenge, generateNonce } from './pkce'
 
 interface FacebookAuthConfig {
@@ -8,6 +8,8 @@ interface FacebookAuthConfig {
 }
 
 export function useFacebookAuth(config: FacebookAuthConfig) {
+  const [inProgress, setInProgress] = useState(false)
+
   useEffect(() => {
     // Check if this is a callback from Facebook
     const params = new URLSearchParams(window.location.search)
@@ -69,6 +71,8 @@ export function useFacebookAuth(config: FacebookAuthConfig) {
 
   const initiateFacebookLogin = async (): Promise<void> => {
     try {
+      setInProgress(true)
+
       const codeVerifier = generateCodeVerifier()
       const codeChallenge = await generateCodeChallenge(codeVerifier)
       const nonce = generateNonce()
@@ -96,6 +100,7 @@ export function useFacebookAuth(config: FacebookAuthConfig) {
       const popup = window.open(authUrl, 'facebook-login', 'width=600,height=700,left=400,top=100')
 
       if (!popup) {
+        setInProgress(false)
         throw new Error('Popup was blocked. Please allow popups for this site.')
       }
 
@@ -126,11 +131,14 @@ export function useFacebookAuth(config: FacebookAuthConfig) {
             config.onSuccess?.(id_token)
           } catch (error) {
             config.onError?.(error instanceof Error ? error : new Error('Failed to complete Facebook authentication'))
+          } finally {
+            setInProgress(false)
           }
         } else if (event.data?.type === 'FACEBOOK_AUTH_ERROR') {
           window.removeEventListener('message', messageHandler)
           clearInterval(checkPopupClosed)
           config.onError?.(new Error(event.data.error))
+          setInProgress(false)
         }
       }
 
@@ -142,14 +150,17 @@ export function useFacebookAuth(config: FacebookAuthConfig) {
           clearInterval(checkPopupClosed)
           window.removeEventListener('message', messageHandler)
           config.onError?.(new Error('Authentication was cancelled'))
+          setInProgress(false)
         }
       }, 1000)
     } catch (error) {
+      setInProgress(false)
       config.onError?.(error instanceof Error ? error : new Error('Failed to initiate Facebook login'))
     }
   }
 
   return {
-    initiateFacebookLogin
+    initiateFacebookLogin,
+    inProgress
   }
 }

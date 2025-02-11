@@ -185,15 +185,13 @@ function Login() {
         client_id: import.meta.env.VITE_FACEBOOK_APP_ID,
         scope: 'openid',
         response_type: 'code',
-        redirect_uri: window.location.origin + window.location.pathname + window.location.search,
+        redirect_uri: window.location.origin + '/facebook-callback',
         state,
         code_challenge: codeChallenge,
         code_challenge_method: 'S256',
         nonce
       })
 
-      const redirectUri = window.location.origin + '/facebook-callback'
-      params.set('redirect_uri', redirectUri)
       const authUrl = `https://www.facebook.com/v11.0/dialog/oauth?${params.toString()}`
 
       // Open popup
@@ -214,8 +212,10 @@ function Login() {
 
       // Add message listener for popup callback
       const messageHandler = async (event: MessageEvent) => {
-        if (event.origin === window.location.origin && event.data?.type === 'FACEBOOK_AUTH_CALLBACK') {
+        // Only accept messages from our callback page
+        if (event.data?.type === 'FACEBOOK_AUTH_CALLBACK') {
           window.removeEventListener('message', messageHandler)
+          clearInterval(checkPopupClosed)
 
           const { code, state: returnedState } = event.data.payload
 
@@ -225,11 +225,12 @@ function Login() {
           }
 
           try {
+            const callbackUrl = window.location.origin + '/facebook-callback'
             // Exchange code for tokens
             const tokenResponse = await fetch(
               `https://graph.facebook.com/v11.0/oauth/access_token?${new URLSearchParams({
                 client_id: import.meta.env.VITE_FACEBOOK_APP_ID,
-                redirect_uri: redirectUri,
+                redirect_uri: callbackUrl,
                 code_verifier: codeVerifier,
                 code
               })}`

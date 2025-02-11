@@ -231,7 +231,6 @@ function Login() {
               label="Use dev env"
               checked={useDevEnv}
               onCheckedChange={() => {
-                // Use full URL path to ensure query param persists
                 localStorage.setItem('isDev', (!useDevEnv).toString())
                 window.location.reload()
               }}

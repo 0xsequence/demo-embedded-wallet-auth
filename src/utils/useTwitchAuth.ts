@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+
 import { generateNonce } from './pkce'
 
 interface TwitchAuthConfig {
@@ -58,6 +59,7 @@ export function useTwitchAuth(config: TwitchAuthConfig) {
       }
 
       // Send tokens back to parent window and close popup
+      // Send message and wait briefly before closing to ensure message is received
       window.opener?.postMessage(
         {
           type: 'TWITCH_AUTH_SUCCESS',
@@ -69,7 +71,7 @@ export function useTwitchAuth(config: TwitchAuthConfig) {
         },
         '*'
       )
-      window.close()
+      setTimeout(() => window.close(), 100)
     }
   }, []) // Only run on first render
 
@@ -103,9 +105,12 @@ export function useTwitchAuth(config: TwitchAuthConfig) {
         throw new Error('Popup was blocked. Please allow popups for this site.')
       }
 
+      let authSucceeded = false
+
       // Add message listener for popup callback
       const messageHandler = async (event: MessageEvent) => {
         if (event.data?.type === 'TWITCH_AUTH_SUCCESS') {
+          authSucceeded = true
           const { idToken, nonce } = event.data.payload
 
           window.removeEventListener('message', messageHandler)
@@ -138,7 +143,7 @@ export function useTwitchAuth(config: TwitchAuthConfig) {
 
       // Check if popup was closed before completing
       const checkPopupClosed = setInterval(() => {
-        if (popup.closed) {
+        if (popup.closed && !authSucceeded) {
           clearInterval(checkPopupClosed)
           window.removeEventListener('message', messageHandler)
           config.onError?.(new Error('Authentication was cancelled'))

@@ -170,7 +170,7 @@ function Login() {
   const { initiateTwitchLogin, inProgress: twitchAuthInProgress } = useTwitchAuth({
     clientId: import.meta.env.VITE_TWITCH_CLIENT_ID,
     redirectUri: `${window.location.origin}/login`,
-    scope: 'openid',
+    scope: 'openid email',
     onSuccess: async idToken => {
       console.log('twitch idToken:', idToken)
       try {

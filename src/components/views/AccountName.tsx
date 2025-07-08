@@ -45,6 +45,14 @@ export function AccountName(props: { acc: Account }) {
     return <>WRAPPED Stytch account ({acc.email}</>
   }
 
+  if (acc.type === IdentityType.Twitter) {
+    return (
+      <Text variant="normal" color="text100">
+        X ({acc.email})
+      </Text>
+    )
+  }
+
   switch (acc.issuer) {
     case 'https://accounts.google.com':
       return (

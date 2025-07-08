@@ -11,6 +11,7 @@ import App from './App.tsx'
 import { ethers } from 'ethers'
 import './main.css'
 import { MaybeWithStytch } from './components/MaybeWithStytch.tsx'
+import { MaybeWithTwitter } from './components/MaybeWithTwitter.tsx'
 
 export const node = new ethers.JsonRpcProvider('https://nodes.sequence.app/polygon')
 
@@ -40,7 +41,8 @@ if (targetEnv === 'dev') {
 export const sequence = new SequenceWaaS({
   network: 'polygon',
   projectAccessKey: projectAccessKey,
-  waasConfigKey: waasConfigKey
+  waasConfigKey: waasConfigKey,
+  disableHttpSignatureCheck: true,
 })
 
 export const router = createHashRouter([
@@ -60,7 +62,9 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
       <ToastProvider>
         <GoogleOAuthProvider clientId={googleClientId}>
           <MaybeWithStytch>
-            <RouterProvider router={router} />
+            <MaybeWithTwitter>
+              <RouterProvider router={router} />
+            </MaybeWithTwitter>
           </MaybeWithStytch>
         </GoogleOAuthProvider>
       </ToastProvider>

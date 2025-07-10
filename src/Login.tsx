@@ -31,6 +31,7 @@ import { PlayFabClient } from 'playfab-sdk'
 import { LoginRequest } from './LoginRequest.tsx'
 import { getMessageFromUnknownError } from './utils/getMessageFromUnknownError.ts'
 import { useCallback } from 'react'
+import { TwitterLogin } from './components/TwitterLogin.tsx'
 
 function Login() {
   const [email, setEmail] = useState('')
@@ -374,6 +375,8 @@ function Login() {
               {import.meta.env.VITE_STYTCH_PUBLIC_TOKEN && !import.meta.env.VITE_STYTCH_LEGACY_ISSUER && <StytchLogin />}
 
               {import.meta.env.VITE_STYTCH_PUBLIC_TOKEN && import.meta.env.VITE_STYTCH_LEGACY_ISSUER && <StytchLegacyLogin />}
+
+              {import.meta.env.VITE_TWITTER_CLIENT_ID && <TwitterLogin />}
             </>
           )}
         </Box>

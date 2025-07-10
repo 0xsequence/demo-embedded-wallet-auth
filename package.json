@@ -16,10 +16,10 @@
     "postinstall": "(cp -n .env.example .env) || echo already exists"
   },
   "dependencies": {
-    "0xsequence": "2.2.4",
-    "@0xsequence/indexer": "2.2.4",
-    "@0xsequence/network": "2.2.4",
-    "@0xsequence/waas": "2.2.4",
+    "0xsequence": "2.3.21",
+    "@0xsequence/indexer": "2.3.21",
+    "@0xsequence/network": "2.3.21",
+    "@0xsequence/waas": "2.3.21",
     "@0xsequence/design-system": "1.7.8",
     "@react-oauth/google": "^0.12.1",
     "@stytch/react": "^19.1.0",

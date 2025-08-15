@@ -19,6 +19,7 @@ import { AccountName } from './components/views/AccountName.tsx'
 import { Account, IdentityType, Network } from '@0xsequence/waas'
 import { getMessageFromUnknownError } from './utils/getMessageFromUnknownError.ts'
 import { PlayFabClient } from 'playfab-sdk'
+import { SignTypedDataView } from './components/views/SignTypedDataView.tsx'
 
 PlayFabClient.settings.titleId = import.meta.env.VITE_PLAYFAB_TITLE_ID
 
@@ -188,6 +189,10 @@ function App() {
         <Collapsible marginY={'3'} label="Sign a message">
           <Divider background="buttonGlass" />
           <SignMessageView network={network} />
+        </Collapsible>
+        <Collapsible marginY={'3'} label="Sign typed data">
+          <Divider background="buttonGlass" />
+          <SignTypedDataView network={network} />
         </Collapsible>
         <Collapsible marginY={'3'} label="Call contracts">
           <Divider background="buttonGlass" />

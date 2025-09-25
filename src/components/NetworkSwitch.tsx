@@ -10,9 +10,10 @@ export function NetworkSwitch({ onNetworkChange }: { onNetworkChange: (network: 
 
   useEffect(() => {
     sequence.networkList().then((networks: NetworkList) => {
-      setNetworkList(networks)
-      setNetwork(networks[0])
-      onNetworkChange(networks[0])
+      const sortedNetworks = [...networks].sort((a, b) => a.name.localeCompare(b.name))
+      setNetworkList(sortedNetworks)
+      setNetwork(sortedNetworks[0])
+      onNetworkChange(sortedNetworks[0])
     })
   }, [])
 
